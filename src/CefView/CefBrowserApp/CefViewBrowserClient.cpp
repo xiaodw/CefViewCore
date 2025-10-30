@@ -11,6 +11,7 @@
 #include <CefViewCoreProtocol.h>
 
 #include "CefViewQueryHandler/CefViewQueryHandler.h"
+#include "CefViewResourceProvider/CefViewResourceProvider.h"
 
 CefViewBrowserClient::CefViewBrowserClient(CefRefPtr<CefViewBrowserApp> app,
                                            CefViewBrowserClientDelegateInterface::RefPtr delegate)
@@ -24,6 +25,10 @@ CefViewBrowserClient::CefViewBrowserClient(CefRefPtr<CefViewBrowserApp> app,
   , resource_manager_(new CefResourceManager())
 {
   app_->CheckInClient(this, delegate);
+
+  // Add custom resource provider to capture all resource requests
+  CefViewBrowserClientDelegateInterface::WeakPtr weak_delegate = delegate;
+  resource_manager_->AddProvider(new CefViewResourceProvider(weak_delegate), 0, std::string());
 
   for (auto& folderMapping : app_->FolderResourceMappingList()) {
     AddLocalDirectoryResourceProvider(folderMapping.path, folderMapping.url, folderMapping.priority);

@@ -57,6 +57,16 @@ public:
                                    const int64_t query_id) = 0;
 
   /// <summary>
+  /// Called when a resource request is received
+  /// </summary>
+  /// <param name="browser"></param>
+  /// <param name="frame"></param>
+  /// <param name="request"></param>
+  virtual void processResourceRequest(CefRefPtr<CefBrowser>& browser,
+                                      CefRefPtr<CefFrame>& frame,
+                                      CefRefPtr<CefRequest>& request) = 0;
+
+  /// <summary>
   ///
   /// </summary>
   /// <param name="browser"></param>
