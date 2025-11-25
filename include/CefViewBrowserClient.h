@@ -73,6 +73,11 @@ private:
   CefRefPtr<CefMessageRouterBrowserSide> message_router_;
   CefRefPtr<CefViewQueryHandler> message_router_handler_;
 
+  // message router for cefQuery
+  CefMessageRouterConfig next_message_router_config_;
+  CefRefPtr<CefMessageRouterBrowserSide> next_message_router_;
+  CefRefPtr<CefViewQueryHandler> next_message_router_handler_;
+
   // resource manager
   CefRefPtr<CefResourceManager> resource_manager_;
 

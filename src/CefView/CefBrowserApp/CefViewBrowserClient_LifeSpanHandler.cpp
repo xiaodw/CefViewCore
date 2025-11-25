@@ -72,10 +72,15 @@ CefViewBrowserClient::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 
   // Register handlers with the router.
   if (browser_map_.empty()) {
+    // Create message router for cefViewQuery
     message_router_ = CefMessageRouterBrowserSide::Create(message_router_config_);
-
     message_router_handler_ = new CefViewQueryHandler(client_delegate_);
     message_router_->AddHandler(message_router_handler_.get(), false);
+
+    // Create message router for cefQuery
+    next_message_router_ = CefMessageRouterBrowserSide::Create(next_message_router_config_);
+    next_message_router_handler_ = new CefViewQueryHandler(client_delegate_);
+    next_message_router_->AddHandler(next_message_router_handler_.get(), false);
   }
 
   auto delegate = client_delegate_.lock();
@@ -123,13 +128,23 @@ CefViewBrowserClient::OnBeforeClose(CefRefPtr<CefBrowser> browser)
   if (delegate)
     delegate->onBeforeClose(browser);
 
-  message_router_->OnBeforeClose(browser);
+  if (message_router_)
+    message_router_->OnBeforeClose(browser);
+  if (next_message_router_)
+    next_message_router_->OnBeforeClose(browser);
 
   browser_map_.erase(browser->GetIdentifier());
 
   if (browser_map_.empty()) {
-    message_router_->RemoveHandler(message_router_handler_.get());
-    message_router_ = nullptr;
-    message_router_handler_ = nullptr;
+    if (message_router_) {
+      message_router_->RemoveHandler(message_router_handler_.get());
+      message_router_ = nullptr;
+      message_router_handler_ = nullptr;
+    }
+    if (next_message_router_) {
+      next_message_router_->RemoveHandler(next_message_router_handler_.get());
+      next_message_router_ = nullptr;
+      next_message_router_handler_ = nullptr;
+    }
   }
 }

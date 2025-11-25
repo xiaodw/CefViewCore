@@ -17,6 +17,17 @@
 /// </summary>
 #define kCefViewRenderProcessName "@CEFVIEW_WING_NAME@"
 
+
+/// <summary>
+///
+/// </summary>
+#define kCefQueryFuntionName "cefQuery"
+
+/// <summary>
+///
+/// </summary>
+#define kCefQueryCancelFunctionName "cefQueryCancel"
+
 /// <summary>
 ///
 /// </summary>

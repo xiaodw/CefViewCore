@@ -36,6 +36,11 @@ private:
   /// <summary>
   ///
   /// </summary>
+  CefRefPtr<CefMessageRouterRendererSide> next_message_router_;
+
+  /// <summary>
+  ///
+  /// </summary>
   typedef std::unordered_map<CefFrameId, CefRefPtr<CefViewBridgeObject>> FrameID2BridgeObjMap;
   FrameID2BridgeObjMap frame_id_to_bridge_obj_map_;
 

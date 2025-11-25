@@ -31,10 +31,17 @@ CefViewRenderApp::OnWebKitInitialized()
 {
   CEF_REQUIRE_RENDERER_THREAD();
 
+  // Create message router for cefViewQuery
   CefMessageRouterConfig config;
   config.js_query_function = kCefViewQueryFuntionName;
   config.js_cancel_function = kCefViewQueryCancelFunctionName;
   message_router_ = CefMessageRouterRendererSide::Create(config);
+
+  // Create message router for cefQuery
+  CefMessageRouterConfig next_config;
+  next_config.js_query_function = kCefQueryFuntionName;
+  next_config.js_cancel_function = kCefQueryCancelFunctionName;
+  next_message_router_ = CefMessageRouterRendererSide::Create(next_config);
 }
 
 void
@@ -68,6 +75,7 @@ CefViewRenderApp::OnContextCreated(CefRefPtr<CefBrowser> browser,
   // V8 context for this frame has been initialized already,
   // but the script of the page hasn't been executed now
   message_router_->OnContextCreated(browser, frame, context);
+  next_message_router_->OnContextCreated(browser, frame, context);
 
   // log this event
   frame->ExecuteJavaScript("console.info('[JSRuntime]:frame context created')", frame->GetURL(), 0);
@@ -95,6 +103,7 @@ CefViewRenderApp::OnContextReleased(CefRefPtr<CefBrowser> browser,
   CEF_REQUIRE_RENDERER_THREAD();
 
   message_router_->OnContextReleased(browser, frame, context);
+  next_message_router_->OnContextReleased(browser, frame, context);
 
   auto frameId = frame->GetIdentifier();
   auto it = frame_id_to_bridge_obj_map_.find(frameId);
@@ -141,6 +150,10 @@ CefViewRenderApp::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
   bool handled = false;
 
   if (message_router_->OnProcessMessageReceived(browser, frame, source_process, message)) {
+    handled = true;
+  }
+
+  if (next_message_router_->OnProcessMessageReceived(browser, frame, source_process, message)) {
     handled = true;
   }
 

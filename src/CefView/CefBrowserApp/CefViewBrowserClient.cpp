@@ -22,6 +22,8 @@ CefViewBrowserClient::CefViewBrowserClient(CefRefPtr<CefViewBrowserApp> app,
   , initial_navigation_(true)
   , message_router_(nullptr)
   , message_router_handler_(nullptr)
+  , next_message_router_(nullptr)
+  , next_message_router_handler_(nullptr)
   , resource_manager_(new CefResourceManager())
 {
   app_->CheckInClient(this, delegate);
@@ -39,9 +41,13 @@ CefViewBrowserClient::CefViewBrowserClient(CefRefPtr<CefViewBrowserApp> app,
       archiveMapping.path, archiveMapping.url, archiveMapping.password, archiveMapping.priority);
   }
 
-  // Create the browser-side router for query handling.
+  // Create the browser-side router for cefViewQuery handling.
   message_router_config_.js_query_function = kCefViewQueryFuntionName;
   message_router_config_.js_cancel_function = kCefViewQueryCancelFunctionName;
+
+  // Create the browser-side router for cefQuery handling.
+  next_message_router_config_.js_query_function = kCefQueryFuntionName;
+  next_message_router_config_.js_cancel_function = kCefQueryCancelFunctionName;
 }
 
 CefViewBrowserClient::~CefViewBrowserClient()
@@ -130,8 +136,11 @@ CefViewBrowserClient::TriggerEvent(CefRefPtr<CefBrowser> browser,
 bool
 CefViewBrowserClient::ResponseQuery(const int64_t query, bool success, const CefString& response, int error)
 {
-  if (message_router_handler_)
-    return message_router_handler_->Response(query, success, response, error);
+  if (message_router_handler_ && message_router_handler_->Response(query, success, response, error))
+    return true;
+
+  if (next_message_router_handler_ && next_message_router_handler_->Response(query, success, response, error))
+    return true;
 
   return false;
 }
@@ -271,7 +280,10 @@ CefViewBrowserClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
                                                CefRefPtr<CefProcessMessage> message)
 {
   CEF_REQUIRE_UI_THREAD();
-  if (message_router_->OnProcessMessageReceived(browser, frame, source_process, message))
+  if (message_router_ && message_router_->OnProcessMessageReceived(browser, frame, source_process, message))
+    return true;
+
+  if (next_message_router_ && next_message_router_->OnProcessMessageReceived(browser, frame, source_process, message))
     return true;
 
   if (DispatchRenderMessage(browser, frame, message))
