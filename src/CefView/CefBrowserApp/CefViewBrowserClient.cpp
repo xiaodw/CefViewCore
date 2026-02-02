@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 #include <algorithm>
+#include <cctype>
 #pragma endregion
 
 #include <Common/CefViewCoreLog.h>
@@ -163,6 +164,48 @@ CefViewBrowserClient::ResponseQuery(const int64_t query, bool success, const Cef
     return true;
 
   return false;
+}
+
+void
+CefViewBrowserClient::SetUrlRouteMap(const std::map<std::string, std::string>& routes)
+{
+  {
+    std::lock_guard<std::mutex> lock(url_route_mutex_);
+    url_route_map_.clear();
+    for (const auto& kv : routes) {
+      url_route_map_[kv.first] = kv.second;
+    }
+  }
+
+  resource_manager_->SetUrlFilter(base::BindRepeating(&CefViewBrowserClient::FilterUrl, base::Unretained(this)));
+}
+
+std::string
+CefViewBrowserClient::FilterUrl(const std::string& url)
+{
+  std::lock_guard<std::mutex> lock(url_route_mutex_);
+  if (url_route_map_.empty()) {
+    return url;
+  }
+
+  // substring match: if the request URL contains fromUrl, return toUrl
+  for (const auto& kv : url_route_map_) {
+    const std::string& pattern = kv.first;
+    if (!pattern.empty() && url.find(pattern) != std::string::npos) {
+      std::string result = kv.second;
+      // Normalize scheme + host to lowercase for provider matching.
+      size_t pos = result.find("://");
+      if (pos != std::string::npos) {
+        for (size_t i = 0; i < pos + 3; ++i) result[i] = (char)tolower(result[i]);
+        size_t next_slash = result.find('/', pos + 3);
+        size_t end = (next_slash == std::string::npos) ? result.length() : next_slash;
+        for (size_t i = pos + 3; i < end; ++i) result[i] = (char)tolower(result[i]);
+      }
+      return result;
+    }
+  }
+
+  return url;
 }
 
 bool

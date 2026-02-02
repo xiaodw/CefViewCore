@@ -11,11 +11,15 @@
 
 #pragma region stl_headers
 #include <unordered_map>
+#include <map>
+#include <mutex>
+#include <string>
 #pragma endregion
 
 #include <CefViewCoreGlobal.h>
 #include <CefViewBrowserApp.h>
 #include <CefViewBrowserClientDelegate.h>
+#include <include/base/cef_bind.h>
 
 #if CEF_VERSION_MAJOR < 122
 #define CEFVIEW_MAIN_FRAME (0)
@@ -84,6 +88,12 @@ private:
   // browser map
   std::unordered_map<int, CefRefPtr<CefBrowser>> browser_map_;
 
+  // url route map
+  std::map<std::string, std::string> url_route_map_;
+  std::mutex url_route_mutex_;
+
+  std::string FilterUrl(const std::string& url);
+
 public:
   /// <summary>
   ///
@@ -139,6 +149,12 @@ public:
   /// <param name="error"></param>
   /// <returns></returns>
   bool ResponseQuery(const int64_t query, bool success, const CefString& response, int error);
+
+  /// <summary>
+  /// Set URL route map: when user navigates to a key URL, content is loaded from the value URL
+  /// while document.location still shows the key (uses CefResourceManager::SetUrlFilter).
+  /// </summary>
+  void SetUrlRouteMap(const std::map<std::string, std::string>& routes);
 
   /// <summary>
   ///
