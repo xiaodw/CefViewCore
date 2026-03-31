@@ -32,7 +32,20 @@ CefViewBrowserClient::OnBeforeResourceLoad(CefRefPtr<CefBrowser> browser,
 )
 {
   auto url = request->GetURL().ToString();
+
+  //std::map<std::string, std::string> request_header_map_;
+  //std::mutex request_header_mutex_;
+
   // logD("require resource: %s", url.c_str());
+  {
+    std::lock_guard<std::mutex> lock(request_header_mutex_);
+    for (const auto& kv : request_header_map_) {
+      //request_header_map_[kv.first] = kv.second;
+      request->SetHeaderByName(kv.first, kv.second, true);
+    }
+  }
+  //request->SetHeaderByName("X-App-Version", "555", true);
+
   return resource_manager_->OnBeforeResourceLoad(browser, frame, request, callback);
 }
 

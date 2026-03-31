@@ -94,6 +94,10 @@ private:
 
   std::string FilterUrl(const std::string& url);
 
+  // request header
+  std::map<std::string, std::string> request_header_map_;
+  std::mutex request_header_mutex_;
+
 public:
   /// <summary>
   ///
@@ -155,6 +159,8 @@ public:
   /// while document.location still shows the key (uses CefResourceManager::SetUrlFilter).
   /// </summary>
   void SetUrlRouteMap(const std::map<std::string, std::string>& routes);
+
+  void SetRequestHeader(const std::map<std::string, std::string>& headers);
 
   /// <summary>
   ///

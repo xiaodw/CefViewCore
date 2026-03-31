@@ -180,6 +180,16 @@ CefViewBrowserClient::SetUrlRouteMap(const std::map<std::string, std::string>& r
   resource_manager_->SetUrlFilter(base::BindRepeating(&CefViewBrowserClient::FilterUrl, base::Unretained(this)));
 }
 
+void
+CefViewBrowserClient::SetRequestHeader(const std::map<std::string, std::string>& headers)
+{
+  std::lock_guard<std::mutex> lock(request_header_mutex_);
+  request_header_map_.clear();
+  for (const auto& kv : headers) {
+    request_header_map_[kv.first] = kv.second;
+  }
+}
+
 std::string
 CefViewBrowserClient::FilterUrl(const std::string& url)
 {
